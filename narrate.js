@@ -36,7 +36,7 @@ Write a quest description for this task at this location.`;
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4.1-mini',
         max_tokens: 200,
         temperature: 0.85,
         messages: [
