@@ -132,10 +132,10 @@ async function beginJourney() {
     const loc = shuffledLocs[i % shuffledLocs.length];
 
     try {
-      // Minimum 1.2s per quest so the loading ritual feels deliberate
+      // Minimum 0.8s per quest so the loading ritual feels deliberate
       const [narration] = await Promise.all([
         generateQuestNarration(tasks[i], loc.name),
-        new Promise(r => setTimeout(r, 1200)),
+        new Promise(r => setTimeout(r, 800)),
       ]);
       questData.push({
         id: i,
@@ -147,7 +147,7 @@ async function beginJourney() {
       });
     } catch (err) {
       console.warn('Narration error, using fallback:', err);
-      await new Promise(r => setTimeout(r, 1200));
+      await new Promise(r => setTimeout(r, 800));
       const fallback = generateFallbackNarration(tasks[i], loc.name);
       questData.push({
         id: i,
@@ -162,7 +162,7 @@ async function beginJourney() {
     if (item) { item.classList.remove('active'); item.classList.add('done'); }
 
     // Pause between tasks so each completion registers visually
-    await new Promise(r => setTimeout(r, 800));
+    await new Promise(r => setTimeout(r, 600));
   }
 
   quests = questData;
