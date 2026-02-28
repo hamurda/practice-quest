@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Practice Quest</title>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --parchment: #f5ede0;
+    --parchment-dark: #e8dcc8;
+    --ink: #2c1810;
+    --ink-light: #5a3d2e;
+    --gold: #c4973b;
+    --gold-glow: #e8b94a;
+    --forest: #2d5a3d;
+    --forest-light: #4a7c5c;
+    --mist: #8b9da3;
+    --ember: #b85c38;
+    --completed: #3d7a52;
+    --path-color: #c4973b44;
+    --path-active: #c4973b;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Crimson Text', Georgia, serif;
+    background: var(--ink);
+    color: var(--ink);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse at 20% 50%, rgba(196, 151, 59, 0.06) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(45, 90, 61, 0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app-container {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: var(--parchment);
+    position: relative;
+    box-shadow: 0 0 80px rgba(0,0,0,0.5);
+  }
+
+  .app-container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .app-container > * { position: relative; z-index: 2; }
+
+  /* ── Header ── */
+  .header {
+    text-align: center;
+    padding: 32px 24px 16px;
+    border-bottom: 1px solid var(--parchment-dark);
+  }
+
+  .header h1 {
+    font-family: 'Crimson Text', serif;
+    font-weight: 700;
+    font-size: 28px;
+    color: var(--ink);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .header .subtitle {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--mist);
+    font-weight: 600;
+  }
+
+  .week-title {
+    font-family: 'Crimson Text', serif;
+    font-style: italic;
+    font-size: 15px;
+    color: var(--gold);
+    margin-top: 12px;
+    min-height: 22px;
+  }
+
+  /* ── Screens ── */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ── Setup ── */
+  .setup-screen { padding: 24px; }
+
+  .setup-intro {
+    text-align: center;
+    padding: 40px 16px 32px;
+  }
+
+  .setup-intro .compass {
+    font-size: 48px;
+    margin-bottom: 16px;
+    display: block;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+
+  .setup-intro h2 {
+    font-family: 'Crimson Text', serif;
+    font-size: 22px;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+
+  .setup-intro p {
+    font-size: 15px;
+    color: var(--ink-light);
+    line-height: 1.6;
+    max-width: 320px;
+    margin: 0 auto;
+  }
+
+  .task-input-area { margin-top: 24px; }
+
+  .task-input-area label {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--mist);
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  .task-entry {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .task-entry input {
+    flex: 1;
+    font-family: 'Crimson Text', serif;
+    font-size: 16px;
+    padding: 12px 16px;
+    border: 1px solid var(--parchment-dark);
+    border-radius: 8px;
+    background: white;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .task-entry input:focus { border-color: var(--gold); }
+  .task-entry input::placeholder { color: #bbb; font-style: italic; }
+
+  .btn-remove-task {
+    width: 40px;
+    height: 44px;
+    border: 1px solid var(--parchment-dark);
+    border-radius: 8px;
+    background: white;
+    color: var(--mist);
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .btn-remove-task:hover { border-color: var(--ember); color: var(--ember); }
+
+  .btn-add-task {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gold);
+    background: none;
+    border: 1px dashed var(--gold);
+    border-radius: 8px;
+    padding: 10px;
+    width: 100%;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 4px;
+  }
+
+  .btn-add-task:hover { background: rgba(196, 151, 59, 0.06); }
+
+  .btn-begin {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--parchment);
+    background: var(--ink);
+    border: none;
+    border-radius: 8px;
+    padding: 16px 32px;
+    width: 100%;
+    cursor: pointer;
+    margin-top: 24px;
+    transition: all 0.3s;
+  }
+
+  .btn-begin:hover {
+    background: var(--ink-light);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(44, 24, 16, 0.3);
+  }
+
+  .btn-begin:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* ── Loading ── */
+  .loading-screen {
+    padding: 60px 24px;
+    text-align: center;
+  }
+
+  .quill-container {
+    margin-bottom: 28px;
+    position: relative;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .quill {
+    font-size: 40px;
+    animation: quillWrite 1.4s ease-in-out infinite;
+    transform-origin: bottom center;
+    display: inline-block;
+  }
+
+  @keyframes quillWrite {
+    0%   { transform: rotate(-15deg) translateX(-4px); }
+    25%  { transform: rotate(-5deg) translateX(4px); }
+    50%  { transform: rotate(-15deg) translateX(-4px); }
+    75%  { transform: rotate(-20deg) translateX(2px); }
+    100% { transform: rotate(-15deg) translateX(-4px); }
+  }
+
+  .ink-dots {
+    position: absolute;
+    bottom: 10px;
+    display: flex;
+    gap: 6px;
+  }
+
+  .ink-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--gold);
+    animation: inkAppear 1.4s ease-in-out infinite;
+  }
+
+  .ink-dot:nth-child(2) { animation-delay: 0.2s; }
+  .ink-dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes inkAppear {
+    0%, 60%, 100% { opacity: 0.2; transform: scale(0.7); }
+    30% { opacity: 1; transform: scale(1); }
+  }
+
+  .loading-title {
+    font-family: 'Crimson Text', serif;
+    font-size: 20px;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+
+  .loading-subtitle {
+    font-family: 'Crimson Text', serif;
+    font-style: italic;
+    font-size: 14px;
+    color: var(--ink-light);
+    line-height: 1.6;
+  }
+
+  .loading-progress {
+    margin-top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .loading-task-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Quicksand', sans-serif;
+    font-size: 12px;
+    color: var(--mist);
+    transition: color 0.3s;
+    padding: 0 16px;
+  }
+
+  .loading-task-item.done { color: var(--completed); }
+  .loading-task-item.active { color: var(--gold); }
+
+  .loading-task-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--parchment-dark);
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+
+  .loading-task-item.done .loading-task-dot { background: var(--completed); }
+  .loading-task-item.active .loading-task-dot {
+    background: var(--gold);
+    animation: pulseDot 1s ease-in-out infinite;
+  }
+
+  @keyframes pulseDot {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(196,151,59,0.4); }
+    50% { box-shadow: 0 0 0 5px rgba(196,151,59,0); }
+  }
+
+  /* ── Journey ── */
+  .journey-screen { padding: 24px; }
+
+  .progress-summary {
+    text-align: center;
+    padding: 8px 0 24px;
+  }
+
+  .progress-fraction {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: var(--mist);
+    text-transform: uppercase;
+  }
+
+  .progress-bar-container {
+    width: 100%;
+    height: 4px;
+    background: var(--parchment-dark);
+    border-radius: 2px;
+    margin-top: 10px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--gold-glow));
+    border-radius: 2px;
+    transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .journey-path {
+    position: relative;
+    padding: 8px 0;
+  }
+
+  .path-line {
+    position: absolute;
+    left: 28px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: repeating-linear-gradient(
+      to bottom,
+      var(--path-color) 0px,
+      var(--path-color) 6px,
+      transparent 6px,
+      transparent 12px
+    );
+  }
+
+  /* ── Quest Cards ── */
+  .quest-card {
+    position: relative;
+    padding-left: 56px;
+    margin-bottom: 20px;
+    transition: transform 0.2s;
+    opacity: 0;
+    transform: translateY(12px);
+    animation: fadeInUp 0.4s ease-out forwards;
+  }
+
+  .quest-card:nth-child(2) { animation-delay: 0.05s; }
+  .quest-card:nth-child(3) { animation-delay: 0.10s; }
+  .quest-card:nth-child(4) { animation-delay: 0.15s; }
+  .quest-card:nth-child(5) { animation-delay: 0.20s; }
+  .quest-card:nth-child(6) { animation-delay: 0.25s; }
+  .quest-card:nth-child(7) { animation-delay: 0.30s; }
+  .quest-card:nth-child(8) { animation-delay: 0.35s; }
+
+  @keyframes fadeInUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .quest-card:not(.locked):hover { transform: translateX(4px); }
+  .quest-card.locked { cursor: default; }
+
+  .quest-node {
+    position: absolute;
+    left: 16px;
+    top: 12px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid var(--parchment-dark);
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    transition: all 0.4s;
+    z-index: 2;
+  }
+
+  .quest-card.current .quest-node {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 4px rgba(196, 151, 59, 0.15);
+    animation: pulseGold 2s ease-in-out infinite;
+  }
+
+  @keyframes pulseGold {
+    0%, 100% { box-shadow: 0 0 0 4px rgba(196, 151, 59, 0.15); }
+    50% { box-shadow: 0 0 0 8px rgba(196, 151, 59, 0.08); }
+  }
+
+  .quest-card.completed .quest-node {
+    border-color: var(--completed);
+    background: var(--completed);
+    color: white;
+  }
+
+  .quest-card.locked .quest-node {
+    border-color: var(--parchment-dark);
+    background: var(--parchment-dark);
+  }
+
+  .quest-card-inner {
+    background: white;
+    border-radius: 12px;
+    padding: 16px 18px;
+    border: 1px solid var(--parchment-dark);
+    transition: all 0.3s;
+  }
+
+  .quest-card.current .quest-card-inner {
+    border-color: var(--gold);
+    box-shadow: 0 2px 12px rgba(196, 151, 59, 0.1);
+  }
+
+  .quest-card.completed .quest-card-inner {
+    background: rgba(61, 122, 82, 0.04);
+    border-color: rgba(61, 122, 82, 0.2);
+  }
+
+  .quest-card.locked .quest-card-inner { opacity: 0.5; }
+
+  .quest-location {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 4px;
+  }
+
+  .quest-card.completed .quest-location { color: var(--completed); }
+
+  .quest-name {
+    font-family: 'Crimson Text', serif;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 6px;
+    line-height: 1.3;
+  }
+
+  .quest-flavour {
+    font-family: 'Crimson Text', serif;
+    font-style: italic;
+    font-size: 14px;
+    color: var(--ink-light);
+    line-height: 1.6;
+  }
+
+  .quest-original-task {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 11px;
+    color: var(--mist);
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--parchment-dark);
+  }
+
+  .quest-status {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .quest-card.completed .quest-status { color: var(--completed); }
+  .quest-card.current .quest-status { color: var(--gold); }
+
+  .quest-complete-btn {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: white;
+    background: var(--gold);
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: all 0.2s;
+  }
+
+  .quest-complete-btn:hover {
+    background: var(--gold-glow);
+    transform: translateY(-1px);
+  }
+
+  /* ── Journey Complete ── */
+  .journey-complete {
+    text-align: center;
+    padding: 48px 24px;
+    display: none;
+  }
+
+  .journey-complete .trophy {
+    font-size: 64px;
+    display: block;
+    margin-bottom: 20px;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .journey-complete h2 {
+    font-family: 'Crimson Text', serif;
+    font-size: 24px;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+
+  .journey-complete p {
+    font-family: 'Crimson Text', serif;
+    font-style: italic;
+    font-size: 16px;
+    color: var(--ink-light);
+    line-height: 1.6;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+
+  .btn-new-journey {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    background: none;
+    border: 2px solid var(--gold);
+    border-radius: 8px;
+    padding: 14px 28px;
+    cursor: pointer;
+    margin-top: 32px;
+    transition: all 0.2s;
+  }
+
+  .btn-new-journey:hover { background: var(--gold); color: white; }
+
+  /* ── Sparkles ── */
+  .sparkle-container {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  .sparkle {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: var(--gold-glow);
+    border-radius: 50%;
+    animation: sparkleRise 1s ease-out forwards;
+  }
+
+  @keyframes sparkleRise {
+    0% { transform: translateY(0) scale(1); opacity: 1; }
+    100% { transform: translateY(-80px) scale(0); opacity: 0; }
+  }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center;
+    padding: 20px 24px;
+    border-top: 1px solid var(--parchment-dark);
+    margin-top: 8px;
+  }
+
+  .footer p {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--mist);
+  }
+
+  @media (max-width: 480px) { .app-container { box-shadow: none; } }
+</style>
+</head>
+<body>
+
+<div class="app-container">
+  <div class="header">
+    <h1>Practice Quest</h1>
+    <div class="subtitle">A Musical Adventure</div>
+    <div class="week-title" id="weekTitle"></div>
+  </div>
+
+  <!-- Setup Screen -->
+  <div class="screen active" id="setupScreen">
+    <div class="setup-screen">
+      <div class="setup-intro">
+        <span class="compass">🧭</span>
+        <h2>Chart Your Journey</h2>
+        <p>Enter this week's practice tasks and the quest shall reveal itself to you.</p>
+      </div>
+
+      <div class="task-input-area">
+        <label>Your Practice Tasks</label>
+        <div id="taskList">
+          <div class="task-entry">
+            <input type="text" placeholder="e.g. Minuet in G, bars 12–20, hands separate" class="task-input" />
+            <button class="btn-remove-task" onclick="removeTask(this)" title="Remove">×</button>
+          </div>
+          <div class="task-entry">
+            <input type="text" placeholder="e.g. C major scale, two octaves" class="task-input" />
+            <button class="btn-remove-task" onclick="removeTask(this)" title="Remove">×</button>
+          </div>
+          <div class="task-entry">
+            <input type="text" placeholder="e.g. Sight-read a new piece" class="task-input" />
+            <button class="btn-remove-task" onclick="removeTask(this)" title="Remove">×</button>
+          </div>
+        </div>
+        <button class="btn-add-task" onclick="addTask()">+ Add another task</button>
+        <button class="btn-begin" id="btnBegin" disabled onclick="beginJourney()">Begin the Journey</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Screen -->
+  <div class="screen" id="loadingScreen">
+    <div class="loading-screen">
+      <div class="quill-container">
+        <span class="quill">🪶</span>
+        <div class="ink-dots">
+          <div class="ink-dot"></div>
+          <div class="ink-dot"></div>
+          <div class="ink-dot"></div>
+        </div>
+      </div>
+      <div class="loading-title">The Scribe Stirs…</div>
+      <div class="loading-subtitle">Your quest narrative is being woven<br>from ancient musical lore.</div>
+      <div class="loading-progress" id="loadingProgress"></div>
+    </div>
+  </div>
+
+  <!-- Journey Screen -->
+  <div class="screen" id="journeyScreen">
+    <div class="journey-screen">
+      <div class="progress-summary">
+        <div class="progress-fraction" id="progressText">0 of 0 quests complete</div>
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="progressBar" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <div class="journey-path" id="journeyPath">
+        <div class="path-line"></div>
+      </div>
+
+      <div class="journey-complete" id="journeyComplete">
+        <span class="trophy">🏰</span>
+        <h2>Journey Complete!</h2>
+        <p>The realm is at peace. Your melodies have echoed through every hall and hollow. Rest now, traveller — until the next adventure calls.</p>
+        <button class="btn-new-journey" onclick="resetJourney()">Begin a New Journey</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>Practice Quest v0.1 · Powered by OpenAI</p>
+  </div>
+</div>
+
+<div class="sparkle-container" id="sparkleContainer"></div>
+
+<script>
+const locations = [
+  { name: "The Whispering Glade", emoji: "🌿" },
+  { name: "The Lantern Bridge", emoji: "🏮" },
+  { name: "The Silver Falls", emoji: "💧" },
+  { name: "The Mossy Archive", emoji: "📜" },
+  { name: "The Ember Hollow", emoji: "🔥" },
+  { name: "The Moonlit Tower", emoji: "🌙" },
+  { name: "The Crystal Cavern", emoji: "💎" },
+  { name: "The Shepherd's Ridge", emoji: "⛰️" },
+  { name: "The Sunken Library", emoji: "📚" },
+  { name: "The Amber Gate", emoji: "🚪" },
+  { name: "The Fern Cathedral", emoji: "🌲" },
+  { name: "The Starfall Meadow", emoji: "✨" },
+  { name: "The Iron Hearth", emoji: "⚒️" },
+  { name: "The Driftwood Cove", emoji: "🐚" },
+  { name: "The Winding Stair", emoji: "🗝️" },
+];
+
+const journeyNames = [
+  "The Path of Echoing Strings",
+  "Through the Vale of Resonance",
+  "The Passage of Gentle Thunder",
+  "Across the Harmonic Wilds",
+  "The Road to the Singing Peaks",
+  "Into the Valley of First Light",
+  "The Trail of Forgotten Melodies",
+  "Beyond the River of Rhythm",
+];
+
+let quests = [];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function pickRandom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// ── API call to our Vercel function ──────────────────────────────────────────
+
+async function generateQuestNarration(task, locationName) {
+  const response = await fetch('/api/narrate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ task, locationName }),
+  });
+
+  if (!response.ok) throw new Error(`API error: ${response.status}`);
+  return await response.json();
+}
+
+function generateFallbackNarration(task, locationName) {
+  const templates = [
+    `The ancient scores in ${locationName} can only be read by those who ${task.toLowerCase()}. The trees lean in to listen.`,
+    `A weathered sign at the entrance reads: "Only those who ${task.toLowerCase()} may pass." The path glows faintly ahead.`,
+    `The keeper of ${locationName} has set a trial: ${task.toLowerCase()}. Complete it, and the way forward opens.`,
+    `Mist clings to ${locationName}. Through it, a melody drifts — it sounds like someone who once dared to ${task.toLowerCase()}. You understand what must be done.`,
+    `Carved into the stone archway: "Let the one who ${task.toLowerCase()} enter freely." You take a breath and begin.`,
+  ];
+  return {
+    questTitle: `Trial of ${locationName.split(' ').slice(-1)[0]}`,
+    flavourText: pickRandom(templates),
+  };
+}
+
+// ── Setup ────────────────────────────────────────────────────────────────────
+
+function addTask() {
+  const taskList = document.getElementById('taskList');
+  const entry = document.createElement('div');
+  entry.className = 'task-entry';
+  entry.innerHTML = `
+    <input type="text" placeholder="e.g. Another practice task…" class="task-input" />
+    <button class="btn-remove-task" onclick="removeTask(this)" title="Remove">×</button>
+  `;
+  taskList.appendChild(entry);
+  entry.querySelector('input').focus();
+  checkBeginButton();
+}
+
+function removeTask(btn) {
+  const entries = document.querySelectorAll('.task-entry');
+  if (entries.length > 1) {
+    btn.parentElement.remove();
+    checkBeginButton();
+  }
+}
+
+function checkBeginButton() {
+  const inputs = document.querySelectorAll('.task-input');
+  const hasValue = Array.from(inputs).some(i => i.value.trim());
+  document.getElementById('btnBegin').disabled = !hasValue;
+}
+
+// ── Journey ──────────────────────────────────────────────────────────────────
+
+async function beginJourney() {
+  const inputs = document.querySelectorAll('.task-input');
+  const tasks = Array.from(inputs).map(i => i.value.trim()).filter(Boolean);
+  if (tasks.length === 0) return;
+
+  const shuffledLocs = shuffle(locations);
+  const journeyName = pickRandom(journeyNames);
+  document.getElementById('weekTitle').textContent = journeyName;
+
+  // Build loading list
+  const loadingProgress = document.getElementById('loadingProgress');
+  loadingProgress.innerHTML = tasks.map((task, i) => `
+    <div class="loading-task-item" id="loadItem${i}">
+      <div class="loading-task-dot"></div>
+      <span>${task}</span>
+    </div>
+  `).join('');
+
+  document.getElementById('setupScreen').classList.remove('active');
+  document.getElementById('loadingScreen').classList.add('active');
+
+  const questData = [];
+
+  for (let i = 0; i < tasks.length; i++) {
+    const item = document.getElementById(`loadItem${i}`);
+    if (item) item.classList.add('active');
+
+    const loc = shuffledLocs[i % shuffledLocs.length];
+
+    try {
+      const narration = await generateQuestNarration(tasks[i], loc.name);
+      questData.push({
+        id: i,
+        task: tasks[i],
+        location: loc,
+        questTitle: narration.questTitle,
+        flavour: narration.flavourText,
+        completed: false,
+      });
+    } catch (err) {
+      console.warn('Narration error, using fallback:', err);
+      const fallback = generateFallbackNarration(tasks[i], loc.name);
+      questData.push({
+        id: i,
+        task: tasks[i],
+        location: loc,
+        questTitle: fallback.questTitle,
+        flavour: fallback.flavourText,
+        completed: false,
+      });
+    }
+
+    if (item) { item.classList.remove('active'); item.classList.add('done'); }
+    await new Promise(r => setTimeout(r, 120));
+  }
+
+  quests = questData;
+  document.getElementById('loadingScreen').classList.remove('active');
+  document.getElementById('journeyScreen').classList.add('active');
+  renderJourney();
+}
+
+function renderJourney() {
+  const path = document.getElementById('journeyPath');
+  const completedCount = quests.filter(q => q.completed).length;
+  const firstIncomplete = quests.findIndex(q => !q.completed);
+  const allComplete = completedCount === quests.length;
+
+  const pct = quests.length > 0 ? (completedCount / quests.length) * 100 : 0;
+  document.getElementById('progressText').textContent = `${completedCount} of ${quests.length} quests complete`;
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('journeyComplete').style.display = allComplete ? 'block' : 'none';
+
+  path.querySelectorAll('.quest-card').forEach(el => el.remove());
+
+  quests.forEach((quest, i) => {
+    const status = quest.completed ? 'completed' : (i === firstIncomplete ? 'current' : 'locked');
+    const card = document.createElement('div');
+    card.className = `quest-card ${status}`;
+
+    let statusHTML = '';
+    if (status === 'completed') {
+      statusHTML = `<div class="quest-status">✓ Quest complete</div>`;
+    } else if (status === 'current') {
+      statusHTML = `<button class="quest-complete-btn" onclick="completeQuest(${quest.id}, event)">✦ Mark Complete</button>`;
+    } else {
+      statusHTML = `<div class="quest-status" style="color: var(--mist);">🔒 Locked</div>`;
+    }
+
+    card.innerHTML = `
+      <div class="quest-node">${quest.completed ? '✓' : quest.location.emoji}</div>
+      <div class="quest-card-inner">
+        <div class="quest-location">${quest.location.name}</div>
+        <div class="quest-name">${quest.questTitle}</div>
+        <div class="quest-flavour">${quest.flavour}</div>
+        <div class="quest-original-task">📋 ${quest.task}</div>
+        ${statusHTML}
+      </div>
+    `;
+
+    path.appendChild(card);
+  });
+}
+
+function completeQuest(id, event) {
+  event.stopPropagation();
+  const quest = quests.find(q => q.id === id);
+  if (!quest) return;
+  quest.completed = true;
+  createSparkles(event.clientX, event.clientY);
+  renderJourney();
+}
+
+function createSparkles(x, y) {
+  const container = document.getElementById('sparkleContainer');
+  for (let i = 0; i < 14; i++) {
+    const s = document.createElement('div');
+    s.className = 'sparkle';
+    s.style.left = (x + (Math.random() - 0.5) * 70) + 'px';
+    s.style.top = (y + (Math.random() - 0.5) * 35) + 'px';
+    s.style.animationDelay = (Math.random() * 0.3) + 's';
+    s.style.background = Math.random() > 0.5 ? 'var(--gold-glow)' : 'var(--gold)';
+    container.appendChild(s);
+    setTimeout(() => s.remove(), 1300);
+  }
+}
+
+function resetJourney() {
+  quests = [];
+  document.getElementById('journeyScreen').classList.remove('active');
+  document.getElementById('loadingScreen').classList.remove('active');
+  document.getElementById('setupScreen').classList.add('active');
+  document.getElementById('journeyComplete').style.display = 'none';
+  document.getElementById('weekTitle').textContent = '';
+
+  document.getElementById('taskList').innerHTML = `
+    <div class="task-entry">
+      <input type="text" placeholder="e.g. Minuet in G, bars 12–20, hands separate" class="task-input" />
+      <button class="btn-remove-task" onclick="removeTask(this)" title="Remove">×</button>
+    </div>
+    <div class="task-entry">
+      <input type="text" placeholder="e.g. C major scale, two octaves" class="task-input" />
+      <button class="btn-remove-task" onclick="removeTask(this)" title="Remove">×</button>
+    </div>
+    <div class="task-entry">
+      <input type="text" placeholder="e.g. Sight-read a new piece" class="task-input" />
+      <button class="btn-remove-task" onclick="removeTask(this)" title="Remove">×</button>
+    </div>
+  `;
+  checkBeginButton();
+}
+
+document.addEventListener('input', (e) => {
+  if (e.target.classList.contains('task-input')) checkBeginButton();
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && e.target.classList.contains('task-input')) {
+    e.preventDefault();
+    const inputs = Array.from(document.querySelectorAll('.task-input'));
+    const idx = inputs.indexOf(e.target);
+    if (idx === inputs.length - 1) addTask();
+    else inputs[idx + 1].focus();
+  }
+});
+</script>
+</body>
+</html>
